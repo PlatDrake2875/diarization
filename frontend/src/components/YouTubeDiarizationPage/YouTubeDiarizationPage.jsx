@@ -1,22 +1,22 @@
 // frontend/src/components/YouTubeDiarizationPage/YouTubeDiarizationPage.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import TranscriptEditor from '../TranscriptEditor/TranscriptEditor';
-import SegmentedTrackbar from '../SegmentedTrackbar/SegmentedTrackbar'; // New component
+import TranscriptEditor from '../TranscriptEditor/TranscriptEditor'; // Assuming this path is correct
+import SegmentedTrackbar from '../SegmentedTrackbar/SegmentedTrackbar'; // Corrected path
 import styles from './YouTubeDiarizationPage.module.css';
 
 function YouTubeDiarizationPage() {
   const [youtubeUrl, setYoutubeUrl] = useState('');
-  // const [videoId, setVideoId] = useState(''); // No longer strictly needed for embed if using local player
+  // const [videoId, setVideoId] = useState(''); 
 
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState('');
   const [downloadSuccessMessage, setDownloadSuccessMessage] = useState('');
   const [downloadDuration, setDownloadDuration] = useState(null);
   
-  const [videoUrlForPlayer, setVideoUrlForPlayer] = useState(''); // URL for the <video> src
-  const [audioServerFilePath, setAudioServerFilePath] = useState(''); // Path of .wav on server for diarization
-  const [processedFileName, setProcessedFileName] = useState(''); // Name of the .wav file or original video title
+  const [videoUrlForPlayer, setVideoUrlForPlayer] = useState(''); 
+  const [audioServerFilePath, setAudioServerFilePath] = useState(''); 
+  const [processedFileName, setProcessedFileName] = useState(''); 
   const [originalVideoTitle, setOriginalVideoTitle] = useState('');
 
   const [transcript, setTranscript] = useState(null);
@@ -27,8 +27,8 @@ function YouTubeDiarizationPage() {
   const currentOperationStartTimeRef = useRef(null); 
   const [elapsedTime, setElapsedTime] = useState(0);
   const timerIntervalRef = useRef(null);
-  const videoRef = useRef(null); // Ref for the <video> element
-  const [videoDuration, setVideoDuration] = useState(0); // Duration of the video for trackbar
+  const videoRef = useRef(null); 
+  const [videoDuration, setVideoDuration] = useState(0); 
 
   useEffect(() => {
     if ((isDownloading || isDiarizing) && currentOperationStartTimeRef.current) {
@@ -41,10 +41,34 @@ function YouTubeDiarizationPage() {
     return () => clearInterval(timerIntervalRef.current);
   }, [isDownloading, isDiarizing]);
 
+  // Simplified YouTube ID extraction - works for common URLs
+  const extractVideoID = (url) => {
+    let videoId = null;
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname === "www.youtube.com" || urlObj.hostname === "youtube.com") {
+        videoId = urlObj.searchParams.get("v");
+      } else if (urlObj.hostname === "youtu.be") {
+        videoId = urlObj.pathname.substring(1);
+      }
+    } catch (e) {
+      console.warn("Could not parse URL for YouTube ID extraction:", url, e);
+      // Fallback for simple copy-pasted embed links if any
+      const regExp = /(?:youtube\.com\/.*v=|youtu\.be\/)([^#&?]{11})/;
+      const match = url.match(regExp);
+      if (match && match[1] && match[1].length === 11) {
+        videoId = match[1];
+      }
+    }
+    return videoId;
+  };
+
+
   const handleUrlChange = (e) => {
     const newUrl = e.target.value;
     setYoutubeUrl(newUrl);
-    setVideoUrlForPlayer(''); // Clear video player on new URL
+    // const id = extractVideoID(newUrl); // videoId for embed is not directly used now
+    setVideoUrlForPlayer(''); 
     setDownloadError('');
     setDownloadSuccessMessage('');
     setAudioServerFilePath('');
@@ -65,7 +89,7 @@ function YouTubeDiarizationPage() {
   };
 
   const handleDownload = async () => {
-    if (!youtubeUrl) {
+    if (!youtubeUrl) { 
       setDownloadError("Please enter a YouTube URL.");
       return;
     }
@@ -91,9 +115,9 @@ function YouTubeDiarizationPage() {
       const duration = Math.floor((Date.now() - localStartTime) / 1000);
       setDownloadDuration(duration);
       setDownloadSuccessMessage(`Data for "${response.data.original_video_title}" ready!`);
-      setVideoUrlForPlayer(`http://localhost:5000${response.data.video_file_url}`); // Full URL to backend server
+      setVideoUrlForPlayer(`http://localhost:5000${response.data.video_file_url}`); 
       setAudioServerFilePath(response.data.audio_server_file_path);
-      setProcessedFileName(response.data.file_name); // This is the .wav filename
+      setProcessedFileName(response.data.audio_file_name); 
       setOriginalVideoTitle(response.data.original_video_title);
     } catch (err) {
       const duration = Math.floor((Date.now() - localStartTime) / 1000);
@@ -119,7 +143,6 @@ function YouTubeDiarizationPage() {
 
     setIsDiarizing(true);
     setDiarizationError('');
-    setTranscript(null); // Clear previous transcript before new diarization
     setDiarizationDuration(null);
     setElapsedTime(0);
 
@@ -151,6 +174,7 @@ function YouTubeDiarizationPage() {
   const handleVideoLoadedMetadata = () => {
     if (videoRef.current) {
       setVideoDuration(videoRef.current.duration);
+      console.log("Video metadata loaded, duration:", videoRef.current.duration);
     }
   };
 
@@ -179,7 +203,7 @@ function YouTubeDiarizationPage() {
         />
         <button 
           onClick={handleDownload} 
-          disabled={isDownloading || isDiarizing || !youtubeUrl}
+          disabled={isDownloading || isDiarizing || !youtubeUrl }
           className={styles.actionButton}
         >
           {isDownloading ? 'Processing...' : 'Fetch Video & Audio'}
@@ -210,20 +234,23 @@ function YouTubeDiarizationPage() {
           <h3>{originalVideoTitle || 'Video Preview'}</h3>
           <video
             ref={videoRef}
-            key={videoUrlForPlayer} /* Force re-render if URL changes */
+            key={videoUrlForPlayer} 
             controls
             width="100%" 
             className={styles.videoPlayer}
             onLoadedMetadata={handleVideoLoadedMetadata}
+            crossOrigin="anonymous"
           >
             <source src={videoUrlForPlayer} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-          {transcript && videoDuration > 0 && (
+          {/* Pass the videoRef.current (the DOM element) to the trackbar */}
+          {videoDuration > 0 && ( // Render trackbar only if duration is known
             <SegmentedTrackbar 
-              segments={transcript} 
+              segments={transcript || []} 
               duration={videoDuration}
               onSeek={handleSeekFromTrackbar}
+              videoElement={videoRef.current} 
             />
           )}
         </div>
@@ -231,7 +258,7 @@ function YouTubeDiarizationPage() {
 
       {audioServerFilePath && !isDownloading && !isDiarizing && (
         <div className={styles.diarizeActionSection}>
-          {!transcript && ( // Show diarize button only if no transcript yet for this video
+          {!transcript && ( 
             <button 
               onClick={handleDiarize} 
               className={styles.actionButton}

@@ -1,22 +1,72 @@
 /* frontend/src/components/YouTubeDiarizationPage/SegmentedTrackbar.module.css */
 .trackbarContainer {
     width: 100%;
-    height: 20px; /* Overall height of the trackbar area */
-    background-color: var(--input-bg-color); /* Light grey background for the track */
+    background-color: var(--input-bg-color); /* Base background for the whole container */
+    border-radius: 5px;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    position: relative; /* For positioning the current time indicator */
+    border: 1px solid var(--border-color);
+    padding: 5px; /* Uniform padding around all rows */
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* Consistent gap between speaker rows */
+  }
+  
+  .trackbarPlaceholder {
+    width: 100%;
+    height: 20px;
+    background-color: var(--input-bg-color);
     border-radius: 5px;
     margin-top: 10px;
     margin-bottom: 15px;
-    cursor: pointer;
-    position: relative; /* For positioning segments and indicator */
     border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-color);
+    opacity: 0.7;
+    font-style: italic;
+    font-size: 0.9em;
+  }
+  
+  
+  .speakerRowTrack {
+    display: flex;
+    align-items: center;
+    height: 22px; /* Slightly increased height for each row */
+    /* margin-bottom: 2px; */ /* Removed - using gap on parent container now */
+  }
+  
+  .speakerLabel {
+    min-width: 100px; 
+    max-width: 150px; /* Or adjust as per your longest typical speaker ID */
+    padding: 0 8px;
+    font-size: 0.8em; /* Made label text slightly larger */
+    font-weight: bold;
+    color: var(--button-text-color); /* Ensure good contrast against dynamic bg */
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px; /* Rounded label */
+    margin-right: 4px; /* Space between label and track background */
+    /* box-shadow: inset -2px 0 2px rgba(0,0,0,0.1); */ /* Removed for a flatter look, can be re-added */
   }
   
   .trackbarBackground {
-    width: 100%;
-    height: 100%; /* Segments will fill this */
-    position: relative;
-    border-radius: 5px; /* Match container */
-    overflow: hidden; /* Ensure segments don't overflow rounded corners */
+    flex-grow: 1; /* Track takes remaining width in the row */
+    height: 100%; 
+    position: relative; /* Segments are positioned relative to this */
+    background-color: var(--secondary-bg-color); /* Background for the track part itself */
+    border-radius: 3px; /* Rounded track background */
+    overflow: hidden; /* Clip segments to rounded corners */
+    border: 1px solid var(--border-color); /* Add a border to make empty tracks always visible */
   }
   
   .segmentBlock {
@@ -24,25 +74,25 @@
     top: 0;
     bottom: 0;
     height: 100%;
-    opacity: 0.7;
+    opacity: 0.85; /* Slightly more opaque for better visibility */
     transition: opacity 0.2s ease;
-    border-right: 1px solid rgba(0,0,0,0.1); /* Subtle separator */
+    /* border-right: 1px solid rgba(255,255,255,0.2); */ /* Removed for cleaner look with distinct row backgrounds */
   }
   
   .segmentBlock:hover {
     opacity: 1;
-    z-index: 10; /* Bring to front on hover */
+    z-index: 10; /* Bring to front on hover for better tooltip visibility */
   }
   
   .currentTimeIndicator {
     position: absolute;
-    top: -2px; /* Slightly above the track */
-    bottom: -2px; /* Slightly below the track */
-    width: 3px; /* Width of the indicator line */
-    background-color: var(--error-text-color); /* A distinct color like red */
-    z-index: 20; /* Above segments */
-    pointer-events: none; /* So it doesn't interfere with clicks on trackbar */
-    border-radius: 2px;
-    box-shadow: 0 0 3px var(--error-text-color);
+    top: 0; 
+    bottom: 0; 
+    width: 3px; 
+    background-color: var(--error-text-color); /* Make it stand out */
+    z-index: 20; 
+    pointer-events: none; 
+    border-radius: 1px;
+    box-shadow: 0 0 4px var(--error-text-color); /* Add a glow */
   }
   
