@@ -1,0 +1,127 @@
+/* frontend/src/components/HomePage/HomePage.module.css */
+.homeContainer {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-color);
+    background-color: var(--primary-bg-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--box-shadow-light);
+  }
+  
+  .heroSection {
+    padding: 40px 20px;
+    margin-bottom: 40px;
+    background-color: var(--secondary-bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+  
+  .title {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    color: var(--text-color);
+    font-weight: 600;
+  }
+  
+  .subtitle {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    color: var(--text-color);
+    opacity: 0.85;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .ctaButtonsContainer {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Space between buttons */
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+  }
+  
+  .ctaButton {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 220px; /* Ensure buttons have a decent width */
+  }
+  
+  .ctaButtonPrimary {
+    background-color: var(--success-button-bg-color);
+    color: var(--button-text-color);
+  }
+  .ctaButtonPrimary:hover {
+    background-color: var(--success-button-hover-bg-color);
+    transform: translateY(-2px);
+  }
+  
+  .ctaButtonSecondary {
+    background-color: var(--info-button-bg-color);
+    color: var(--button-text-color);
+  }
+  .ctaButtonSecondary:hover {
+    background-color: var(--info-button-hover-bg-color);
+    transform: translateY(-2px);
+  }
+  
+  
+  .featuresSection {
+    margin-top: 40px;
+    padding: 20px;
+  }
+  
+  .sectionTitle {
+    font-size: 2em;
+    margin-bottom: 30px;
+    color: var(--text-color);
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--button-bg-color);
+    display: inline-block;
+  }
+  
+  .featuresGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+  }
+  
+  .featureCard {
+    background-color: var(--secondary-bg-color);
+    padding: 25px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px var(--box-shadow-light);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .featureCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px var(--box-shadow-medium);
+  }
+  
+  .featureIcon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    display: block;
+  }
+  
+  .featureCard h3 {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    color: var(--text-color);
+  }
+  
+  .featureCard p {
+    font-size: 0.95em;
+    color: var(--text-color);
+    opacity: 0.8;
+    line-height: 1.6;
+  }
+  

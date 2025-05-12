@@ -1,0 +1,157 @@
+/* frontend/src/components/YouTubeDiarizationPage/YouTubeDiarizationPage.module.css */
+.ytPageContainer {
+    background-color: var(--primary-bg-color);
+    color: var(--text-color);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--box-shadow-light);
+  }
+  
+  .pageHeader {
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .pageHeader h2 {
+    font-size: 1.8em;
+    color: var(--text-color);
+    margin-bottom: 8px;
+  }
+  
+  .pageHeader p {
+    font-size: 1em;
+    color: var(--text-color);
+    opacity: 0.8;
+  }
+  
+  .inputSection {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  }
+  
+  .urlInput {
+    flex-grow: 1;
+    padding: 12px 15px;
+    font-size: 1em;
+    border: 1px solid var(--input-border-color);
+    border-radius: 5px;
+    background-color: var(--input-bg-color);
+    color: var(--input-text-color);
+    min-width: 300px; /* Ensure input has decent width */
+  }
+  
+  .actionButton {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+    white-space: nowrap; /* Prevent button text from wrapping */
+  }
+  
+  .actionButton:hover:not(:disabled) {
+    background-color: var(--button-hover-bg-color);
+  }
+  
+  .actionButton:disabled {
+    background-color: #bdc3c7;
+    color: #7f8c8d;
+    cursor: not-allowed;
+  }
+  
+  .videoPreview {
+    margin: 25px auto;
+    text-align: center;
+    max-width: 560px; /* Standard 16:9 aspect ratio for 315px height */
+  }
+  
+  .videoPreview iframe {
+    width: 100%; /* Make iframe responsive within its container */
+    max-width: 560px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--box-shadow-medium);
+  }
+  
+  .loadingContainer,
+  .errorContainer,
+  .successContainer,
+  .diarizeActionSection {
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 8px;
+  }
+  
+  .loadingContainer p {
+    font-size: 1.1em;
+    color: var(--text-color);
+    margin-bottom: 10px;
+  }
+  
+  .hourglass {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    display: inline-block;
+  }
+  
+  .elapsedTime {
+    font-size: 1em;
+    color: var(--text-color);
+    opacity: 0.8;
+    margin-top: 5px;
+  }
+  
+  .errorMessage {
+    color: var(--error-text-color);
+    font-weight: bold;
+    background-color: var(--error-bg-color);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--error-text-color);
+    display: inline-block; /* So it doesn't take full width unless needed */
+  }
+  .successMessage {
+    color: var(--success-button-hover-bg-color); /* Using success color */
+    font-weight: bold;
+    background-color: #e6ffed; /* Light green background */
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--success-button-bg-color);
+    display: inline-block;
+  }
+  body.dark .successMessage { /* Dark mode specific success message */
+      background-color: #163828;
+      border-color: var(--success-button-hover-bg-color);
+  }
+  
+  
+  .diarizeActionSection {
+    background-color: var(--secondary-bg-color);
+    padding: 25px;
+    border: 1px solid var(--border-color);
+  }
+  
+  .readyMessage {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    color: var(--text-color);
+  }
+  .readyMessage strong {
+      font-weight: 600;
+      color: var(--button-bg-color);
+  }
+  
+  /* Ensure TranscriptEditor takes up available width */
+  :global(.transcriptEditorContainerOverride) { /* Example of a global override if needed */
+    width: 100% !important;
+  }
+  
+  

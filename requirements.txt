@@ -1,3 +1,5 @@
+# Backend requirements for the Speaker Diarization project
+
 # Core web framework for the API
 Flask
 Flask-CORS
@@ -5,7 +7,7 @@ Flask-CORS
 # Deep learning and audio processing
 torch
 torchaudio # Often a companion to torch for audio tasks
-pyannote.audio>=3.1 # For speaker diarization; version 3.1 was mentioned in logs
+pyannote.audio>=3.1 # For speaker diarization
 transformers    # For ASR models like Whisper
 
 # Audio file handling
@@ -14,5 +16,9 @@ soundfile
 # Numerical operations (often a dependency of the above, but good to list)
 numpy
 
-# Progress bars
+# Progress bars (tqdm is used in pipeline_core for word alignment)
 tqdm
+
+# YouTube downloading and audio conversion
+yt-dlp # For downloading YouTube audio
+pydub    # For audio conversion (requires ffmpeg to be installed on the system)

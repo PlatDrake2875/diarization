@@ -1,3 +1,7 @@
 /__pycache__
 /assets
 /diarization_output_modular
+/backend/youtube_downloads
+/backend/uploads
+/backend/diarization_results
+/frontend/node_modules
