@@ -14,9 +14,9 @@ from typing import Optional, Dict, Any, List
 
 import torch
 from pyannote.audio import Pipeline as PyannoteDiarizationPipeline
-from pyannote.audio.pipelines.utils.hook import ProgressHook
+# from pyannote.audio.pipelines.utils.hook import ProgressHook # Removed
 from pyannote.core import Annotation
-from tqdm import tqdm
+from tqdm import tqdm # tqdm can still be used for non-console progress if needed elsewhere
 from transformers import pipeline as hf_pipeline
 
 # Assuming config.py is in the same directory or accessible via PYTHONPATH
@@ -125,12 +125,15 @@ class SpeechDiarizationPipeline:
         try:
             pipeline_to_run = self.diarization_pipeline
             logger.info(f"Applying diarization pipeline to: {self.config.audio_file_path}")
-            with ProgressHook() as hook:
-                diarization_result: Annotation = pipeline_to_run(
-                    {"uri": self.config.audio_file_path.stem, "audio": str(self.config.audio_file_path)},
-                    hook=hook,
-                    num_speakers=None
-                )
+            
+            # Removed ProgressHook for API stability
+            diarization_result: Annotation = pipeline_to_run(
+                {"uri": self.config.audio_file_path.stem, "audio": str(self.config.audio_file_path)},
+                # hook=hook, # Removed hook argument
+                num_speakers=None
+            )
+            logger.info("Diarization processing finished (ProgressHook disabled for API).")
+            
             logger.info(f"Saving diarization results to: {cache_path}")
             cache_path.parent.mkdir(parents=True, exist_ok=True)
             with open(cache_path, 'wb') as f:
@@ -216,17 +219,15 @@ class SpeechDiarizationPipeline:
     def _get_speaker_for_word(self, diarization: Annotation, word_mid_time: float) -> str:
         """
         Finds the speaker label for a given time point using diarization.itertracks().
-        This matches the logic in old_main.py.
         """
         try:
              for segment, _, speaker_label in diarization.itertracks(yield_label=True):
                   if segment.start <= word_mid_time < segment.end:
                       return speaker_label
         except Exception as iter_e:
-             # Log the error but don't necessarily stop; UNKNOWN_SPEAKER is the fallback
              logger.error(f"Error during speaker lookup via itertracks at {word_mid_time:.2f}s: {iter_e}")
              
-        return "UNKNOWN_SPEAKER" # Default if no speaker is found or an error occurs
+        return "UNKNOWN_SPEAKER"
 
     def _combine_results(self, diarization_result: Annotation, asr_result: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Combines speaker diarization labels with ASR word timestamps."""
@@ -240,9 +241,11 @@ class SpeechDiarizationPipeline:
 
         final_segments: List[Dict[str, Any]] = []
         current_segment: Optional[Dict[str, Any]] = None
+        # Using tqdm for the loop here is fine as it's not a Rich live display
         logger.info(f"Aligning {len(word_chunks)} words to speaker segments...")
 
-        for i, word_info in enumerate(tqdm(word_chunks, desc="Aligning words")):
+
+        for i, word_info in enumerate(tqdm(word_chunks, desc="Aligning words")): # tqdm for console progress
             if not isinstance(word_info, dict):
                 logger.warning(f"Skipping invalid word_info item (not a dict) at index {i}: {word_info}")
                 continue

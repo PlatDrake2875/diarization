@@ -1,0 +1,75 @@
+/* frontend/src/components/FileUpload/FileUpload.module.css */
+.uploadSection {
+  background-color: var(--secondary-bg-color); /* Use variable */
+  color: var(--text-color); /* Use variable */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px var(--box-shadow-light); /* Use variable */
+  margin-bottom: 30px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.title {
+  color: var(--text-color); /* Use variable */
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.5em;
+}
+
+.instructions {
+  color: var(--text-color); /* Use variable, maybe a bit dimmer if defined */
+  opacity: 0.8;
+  margin-bottom: 20px;
+  font-size: 0.95em;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.chooseFileButton {
+  background-color: var(--button-bg-color); /* Use variable */
+  color: var(--button-text-color); /* Use variable */
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.2s ease;
+  margin-right: 10px;
+}
+
+.chooseFileButton:hover {
+  background-color: var(--button-hover-bg-color); /* Use variable */
+}
+
+.fileNameDisplay {
+  font-style: italic;
+  color: var(--text-color); /* Use variable */
+  opacity: 0.7;
+  margin-left: 10px;
+}
+
+.uploadButton {
+  background-color: var(--success-button-bg-color); /* Use variable */
+  color: var(--button-text-color); /* Use variable */
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+  margin-top: 15px;
+}
+
+.uploadButton:disabled {
+  background-color: #bdc3c7; /* Keep a distinct disabled style */
+  color: #7f8c8d;
+  cursor: not-allowed;
+}
+
+.uploadButton:not(:disabled):hover {
+  background-color: var(--success-button-hover-bg-color); /* Use variable */
+}

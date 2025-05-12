@@ -1,0 +1,108 @@
+/* frontend/src/App.module.css */
+.appContainer {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  width: 100%;
+  margin: 0;
+  padding: 20px;
+  background-color: var(--bg-color); /* Use variable */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.header {
+  background-color: var(--header-bg-color); /* Use variable */
+  color: var(--header-text-color); /* Use variable */
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 8px var(--box-shadow-medium); /* Use variable */
+  display: flex; /* For aligning title and button */
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerContent {
+  text-align: left; /* Align header text to the left */
+}
+
+.header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2em;
+}
+
+.header p {
+  margin: 0;
+  font-size: 1em;
+  color: var(--header-subtext-color); /* Use variable */
+}
+
+.themeToggleButton {
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  border: 1px solid var(--border-color);
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  margin-left: 20px; /* Space from the header text */
+}
+
+.themeToggleButton:hover {
+  background-color: var(--button-hover-bg-color);
+}
+
+.mainContent {
+  flex-grow: 1;
+  background-color: var(--primary-bg-color); /* Use variable */
+  color: var(--text-color); /* Ensure text inside main content also uses theme color */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px var(--box-shadow-light); /* Use variable */
+}
+
+.loadingContainer,
+.errorContainer {
+  text-align: center;
+  padding: 40px 20px;
+  margin-top: 20px;
+  border-radius: 8px;
+}
+
+.loadingContainer p {
+  font-size: 1.1em;
+  color: var(--text-color); /* Use variable */
+  margin-bottom: 10px;
+}
+
+.errorMessage {
+  color: var(--error-text-color); /* Use variable */
+  font-weight: bold;
+  background-color: var(--error-bg-color); /* Use variable */
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid var(--error-text-color); /* Use variable */
+}
+
+.hourglass {
+  font-size: 2.5em;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.elapsedTime {
+  font-size: 1em;
+  color: var(--text-color); /* Use variable */
+  margin-top: 5px;
+}
+
+.footer {
+  text-align: center;
+  padding: 20px 0;
+  margin-top: 30px;
+  color: var(--footer-text-color); /* Use variable */
+  font-size: 0.9em;
+  border-top: 1px solid var(--footer-border-color); /* Use variable */
+}

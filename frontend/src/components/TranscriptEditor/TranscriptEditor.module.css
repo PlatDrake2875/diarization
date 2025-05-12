@@ -1,0 +1,108 @@
+/* frontend/src/components/TranscriptEditor/TranscriptEditor.module.css */
+.editorContainer {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: var(--secondary-bg-color); /* Use variable */
+  color: var(--text-color); /* Use variable */
+  border-radius: 8px;
+  border: 1px solid var(--border-color); /* Use variable */
+}
+
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border-color); /* Use variable */
+}
+
+.title {
+  color: var(--text-color); /* Use variable */
+  font-size: 1.4em;
+  margin: 0;
+}
+
+.fileName {
+  font-weight: normal;
+  color: var(--text-color); /* Use variable */
+  opacity: 0.8;
+  font-size: 0.9em;
+}
+
+.downloadButton {
+  background-color: var(--info-button-bg-color); /* Use variable */
+  color: var(--button-text-color); /* Use variable */
+  padding: 10px 18px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.95em;
+  transition: background-color 0.2s ease;
+}
+
+.downloadButton:hover {
+  background-color: var(--info-button-hover-bg-color); /* Use variable */
+}
+
+.transcriptGrid {
+  display: grid;
+  gap: 20px;
+}
+
+.segment {
+  background-color: var(--primary-bg-color); /* Use variable */
+  color: var(--text-color); /* Use variable */
+  padding: 15px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px var(--box-shadow-light); /* Use variable */
+  border: 1px solid var(--border-color); /* Use variable */
+}
+
+.segmentMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.speakerInput {
+  padding: 8px 10px;
+  background-color: var(--input-bg-color); /* Use variable */
+  color: var(--input-text-color); /* Use variable */
+  border: 1px solid var(--input-border-color); /* Use variable */
+  border-radius: 4px;
+  font-size: 0.95em;
+  width: 150px;
+  box-sizing: border-box;
+}
+
+.timestamp {
+  font-size: 0.85em;
+  color: var(--timestamp-text-color); /* Use variable */
+  background-color: var(--timestamp-bg-color); /* Use variable */
+  padding: 5px 8px;
+  border-radius: 4px;
+}
+
+.textInput {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--input-bg-color); /* Use variable */
+  color: var(--input-text-color); /* Use variable */
+  border: 1px solid var(--input-border-color); /* Use variable */
+  border-radius: 4px;
+  font-size: 1em;
+  line-height: 1.5;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.noDataMessage {
+  text-align: center;
+  color: var(--text-color); /* Use variable */
+  opacity: 0.7;
+  font-style: italic;
+  padding: 20px;
+}

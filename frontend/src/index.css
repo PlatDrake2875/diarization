@@ -1,0 +1,86 @@
+/* frontend/src/index.css */
+
+/* Define light theme variables by default */
+:root {
+  --bg-color: #f4f7f6;
+  --text-color: #2c3e50;
+  --primary-bg-color: #ffffff;
+  --secondary-bg-color: #f9f9f9; /* For elements like editor segments */
+  --header-bg-color: #2c3e50;
+  --header-text-color: #ffffff;
+  --header-subtext-color: #bdc3c7;
+  --button-bg-color: #3498db;
+  --button-text-color: #ffffff;
+  --button-hover-bg-color: #2980b9;
+  --success-button-bg-color: #2ecc71;
+  --success-button-hover-bg-color: #27ae60;
+  --info-button-bg-color: #007bff;
+  --info-button-hover-bg-color: #0056b3;
+  --border-color: #e0e0e0;
+  --input-bg-color: #ffffff;
+  --input-text-color: #333333;
+  --input-border-color: #cccccc;
+  --timestamp-bg-color: #f0f0f0;
+  --timestamp-text-color: #555555;
+  --error-text-color: #e74c3c;
+  --error-bg-color: #fddfdf;
+  --footer-text-color: #7f8c8d;
+  --footer-border-color: #ecf0f1;
+  --link-color: #3498db;
+  --box-shadow-light: rgba(0, 0, 0, 0.08);
+  --box-shadow-medium: rgba(0, 0, 0, 0.1);
+}
+
+/* Define dark theme variables when the 'dark' class is on the body */
+body.dark {
+  --bg-color: #1a1a1a; /* Darker background */
+  --text-color: #e0e0e0; /* Lighter text */
+  --primary-bg-color: #2c2c2c; /* Darker primary content background */
+  --secondary-bg-color: #333333; /* Darker secondary elements */
+  --header-bg-color: #1f2933; /* Slightly different dark header */
+  --header-text-color: #f0f0f0;
+  --header-subtext-color: #9ca3af;
+  --button-bg-color: #58a6ff; /* Brighter blue for dark mode */
+  --button-text-color: #1c1c1c; /* Darker text on bright button */
+  --button-hover-bg-color: #388bfd;
+  --success-button-bg-color: #34d399;
+  --success-button-hover-bg-color: #10b981;
+  --info-button-bg-color: #008cff;
+  --info-button-hover-bg-color: #006fff;
+  --border-color: #444444; /* Darker borders */
+  --input-bg-color: #3a3a3a;
+  --input-text-color: #e0e0e0;
+  --input-border-color: #555555;
+  --timestamp-bg-color: #404040;
+  --timestamp-text-color: #cccccc;
+  --error-text-color: #ff8a80; /* Lighter error text */
+  --error-bg-color: #5c2b29;   /* Darker error background */
+  --footer-text-color: #9ca3af;
+  --footer-border-color: #374151;
+  --link-color: #58a6ff;
+  --box-shadow-light: rgba(255, 255, 255, 0.08);
+  --box-shadow-medium: rgba(255, 255, 255, 0.1);
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color); /* Use CSS variable */
+  color: var(--text-color); /* Use CSS variable */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}

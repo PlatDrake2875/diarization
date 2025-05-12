@@ -1,0 +1,18 @@
+# Core web framework for the API
+Flask
+Flask-CORS
+
+# Deep learning and audio processing
+torch
+torchaudio # Often a companion to torch for audio tasks
+pyannote.audio>=3.1 # For speaker diarization; version 3.1 was mentioned in logs
+transformers    # For ASR models like Whisper
+
+# Audio file handling
+soundfile
+
+# Numerical operations (often a dependency of the above, but good to list)
+numpy
+
+# Progress bars
+tqdm
