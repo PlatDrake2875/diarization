@@ -64,31 +64,44 @@
   .actionButton:disabled {
     background-color: #bdc3c7;
     color: #7f8c8d;
-    opacity: 0.7; /* Make it look more disabled */
+    opacity: 0.7;
     cursor: not-allowed;
   }
   
-  .videoPreview {
-    margin: 25px auto;
-    text-align: center;
-    max-width: 560px;
+  /* Styles for the video player section */
+  .videoPlayerSection {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    background-color: var(--secondary-bg-color);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
   }
   
-  .videoPreview iframe {
-    width: 100%;
-    max-width: 560px;
-    height: 315px; /* Maintain 16:9 aspect ratio for 560px width */
-    border-radius: 8px;
-    box-shadow: 0 4px 12px var(--box-shadow-medium);
+  .videoPlayerSection h3 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    color: var(--text-color);
   }
+  
+  .videoPlayer {
+    max-width: 100%; /* Make video responsive */
+    border-radius: 6px;
+    display: block; /* Remove extra space below video */
+    margin: 0 auto; /* Center if max-width is less than container */
+    background-color: #000; /* Black background for video player area */
+  }
+  
   
   .loadingContainer,
   .errorContainer,
   .successContainer,
-  .summaryContainer, /* Added summaryContainer */
+  .summaryContainer,
   .diarizeActionSection {
     text-align: center;
-    padding: 15px 20px; /* Adjusted padding */
+    padding: 15px 20px;
     margin-top: 20px;
     border-radius: 8px;
   }
@@ -98,7 +111,7 @@
     border: 1px solid var(--border-color);
     font-size: 0.95em;
     color: var(--text-color);
-    margin-bottom: 10px; /* Space below summary */
+    margin-bottom: 10px;
   }
   
   

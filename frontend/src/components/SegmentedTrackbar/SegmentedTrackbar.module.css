@@ -1,0 +1,48 @@
+/* frontend/src/components/YouTubeDiarizationPage/SegmentedTrackbar.module.css */
+.trackbarContainer {
+    width: 100%;
+    height: 20px; /* Overall height of the trackbar area */
+    background-color: var(--input-bg-color); /* Light grey background for the track */
+    border-radius: 5px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    position: relative; /* For positioning segments and indicator */
+    border: 1px solid var(--border-color);
+  }
+  
+  .trackbarBackground {
+    width: 100%;
+    height: 100%; /* Segments will fill this */
+    position: relative;
+    border-radius: 5px; /* Match container */
+    overflow: hidden; /* Ensure segments don't overflow rounded corners */
+  }
+  
+  .segmentBlock {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    border-right: 1px solid rgba(0,0,0,0.1); /* Subtle separator */
+  }
+  
+  .segmentBlock:hover {
+    opacity: 1;
+    z-index: 10; /* Bring to front on hover */
+  }
+  
+  .currentTimeIndicator {
+    position: absolute;
+    top: -2px; /* Slightly above the track */
+    bottom: -2px; /* Slightly below the track */
+    width: 3px; /* Width of the indicator line */
+    background-color: var(--error-text-color); /* A distinct color like red */
+    z-index: 20; /* Above segments */
+    pointer-events: none; /* So it doesn't interfere with clicks on trackbar */
+    border-radius: 2px;
+    box-shadow: 0 0 3px var(--error-text-color);
+  }
+  

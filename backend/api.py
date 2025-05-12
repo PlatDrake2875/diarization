@@ -3,7 +3,7 @@ import os
 import uuid
 import logging
 from pathlib import Path
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory # Added send_from_directory
 from flask_cors import CORS
 import yt_dlp 
 from pydub import AudioSegment
@@ -20,11 +20,11 @@ logging.basicConfig(
 api_logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+CORS(app) # This enables CORS for all routes
 
 BACKEND_DIR = Path(__file__).resolve().parent
 UPLOAD_FOLDER = BACKEND_DIR / 'uploads'
-YOUTUBE_DOWNLOADS_FOLDER = BACKEND_DIR / 'youtube_downloads'
+YOUTUBE_DOWNLOADS_FOLDER = BACKEND_DIR / 'youtube_downloads' # For both audio and video
 RESULTS_FOLDER = BACKEND_DIR / 'diarization_results'
 
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
@@ -40,9 +40,9 @@ def cleanup_files(*file_paths: Path):
         except Exception as e:
             api_logger.error(f"Error cleaning up file {file_path}: {e}")
 
-@app.route('/api/download_youtube_audio', methods=['POST'])
-def download_youtube_audio_route():
-    api_logger.info("Received request to /api/download_youtube_audio")
+@app.route('/api/download_youtube_audio', methods=['POST']) # Renaming to reflect it gets audio for diarization
+def download_youtube_data_route():
+    api_logger.info("Received request to /api/download_youtube_audio (for video and audio)")
     data = request.get_json()
     if not data or 'youtube_url' not in data:
         api_logger.warning("Missing youtube_url in request body")
@@ -52,131 +52,133 @@ def download_youtube_audio_route():
     request_id = str(uuid.uuid4())
     api_logger.info(f"Processing request ID: {request_id} for URL: {youtube_url}")
     
-    expected_downloaded_filename = f"{request_id}.wav"
-    downloaded_audio_path = YOUTUBE_DOWNLOADS_FOLDER / expected_downloaded_filename
-    output_template_for_yt_dlp = str(YOUTUBE_DOWNLOADS_FOLDER / f"{request_id}.%(ext)s")
-
-    # --- Progress Hook for yt-dlp (less spammy) ---
-    last_logged_percent = -10 # Initialize to ensure first log at 0% or more
-
-    def my_hook(d):
-        nonlocal last_logged_percent
-        if d['status'] == 'downloading':
-            try:
-                percent_str = d.get('_percent_str', '0%').replace('%', '')
-                current_percent = float(percent_str)
-                # Log roughly every 10% or if it's the first/last update for downloading
-                if current_percent >= last_logged_percent + 10 or current_percent == 0 or current_percent == 100:
-                    api_logger.info(
-                        f"[{request_id}] yt-dlp download: {d.get('_percent_str', 'N/A'):>5} "
-                        f"of {d.get('_total_bytes_str', 'N/A'):<10} "
-                        f"at {d.get('_speed_str', 'N/A'):<12} "
-                        f"ETA {d.get('_eta_str', 'N/A')}"
-                    )
-                    last_logged_percent = current_percent if current_percent < 100 else -10 # Reset for next potential download in batch (not applicable here)
-            except ValueError:
-                api_logger.debug(f"[{request_id}] yt-dlp hook (downloading): {d.get('_percent_str', 'N/A')}") # Fallback log if percent parsing fails
-        elif d['status'] == 'finished':
-            api_logger.info(f"[{request_id}] yt-dlp: Finished downloading '{d.get('filename', 'N/A')}'. Now post-processing...")
-            last_logged_percent = -10 # Reset for next file/stage
-        elif d['status'] == 'error':
-            api_logger.error(f"[{request_id}] yt-dlp: Error during processing. Info: {d.get('filename', 'N/A')}")
-
+    # Paths for video (mp4) and audio (wav)
+    video_filename_mp4 = f"{request_id}.mp4"
+    downloaded_video_path_mp4 = YOUTUBE_DOWNLOADS_FOLDER / video_filename_mp4
+    
+    audio_filename_wav = f"{request_id}.wav" # This will be the audio for diarization
+    processed_audio_path_wav = YOUTUBE_DOWNLOADS_FOLDER / audio_filename_wav
+    
+    temp_downloaded_audio_ext = None # To store extension of initially downloaded audio by yt-dlp
 
     try:
-        api_logger.info(f"[{request_id}] Setting yt-dlp options to download and convert to WAV...")
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': output_template_for_yt_dlp,
+        api_logger.info(f"[{request_id}] Setting yt-dlp options to download video and extract audio...")
+        
+        # First, download the video (e.g., best quality MP4)
+        ydl_video_opts = {
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', # Prioritize MP4
+            'outtmpl': str(YOUTUBE_DOWNLOADS_FOLDER / f"{request_id}.%(ext)s"), # Let yt-dlp determine extension initially for video
             'noplaylist': True,
-            'quiet': False, 
-            'verbose': False, 
+            'quiet': True,
+            'verbose': False,
             'nocheckcertificate': True,
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'wav',
-                'preferredquality': '0', 
-            }],
-            'progress_hooks': [my_hook], # Use the custom, less spammy hook
-            'ffmpeg_location': os.getenv('FFMPEG_PATH')
+            'ffmpeg_location': os.getenv('FFMPEG_PATH'),
+            'progress_hooks': [lambda d: api_logger.info(f"[{request_id}] yt-dlp video: {d['status']} - {d.get('_percent_str','')} {d.get('_eta_str','')}") if d['status'] == 'downloading' and '_percent_str' in d else (api_logger.info(f"[{request_id}] yt-dlp video: {d['status']}") if d['status'] == 'finished' else None)],
         }
         
-        api_logger.info(f"[{request_id}] Initializing YoutubeDL with options: {ydl_opts}")
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            api_logger.info(f"[{request_id}] Starting audio download and WAV conversion from: {youtube_url}")
+        downloaded_video_actual_path = None
+        with yt_dlp.YoutubeDL(ydl_video_opts) as ydl:
+            api_logger.info(f"[{request_id}] Starting video download from: {youtube_url}")
             info_dict = ydl.extract_info(youtube_url, download=True)
-            api_logger.info(f"[{request_id}] yt-dlp extract_info call completed. FFmpeg (if used by yt-dlp for WAV) should have run.")
+            # Try to get the actual path of the downloaded video file
+            if 'requested_downloads' in info_dict and info_dict['requested_downloads']:
+                 downloaded_video_actual_path = Path(info_dict['requested_downloads'][0]['filepath'])
+            elif 'filename' in info_dict: # Older yt-dlp versions might put it here directly
+                 downloaded_video_actual_path = YOUTUBE_DOWNLOADS_FOLDER / Path(info_dict['filename']).name
+            else: # Fallback: try to find it by request_id and common video extensions
+                for ext in ['mp4', 'mkv', 'webm']:
+                    potential_path = YOUTUBE_DOWNLOADS_FOLDER / f"{request_id}.{ext}"
+                    if potential_path.exists():
+                        downloaded_video_actual_path = potential_path
+                        break
+            
+            if not downloaded_video_actual_path or not downloaded_video_actual_path.exists():
+                api_logger.error(f"[{request_id}] Could not find downloaded video file.")
+                return jsonify({"error": "Failed to locate downloaded video file."}), 500
+            
+            # Rename to consistent .mp4 if it's not already (yt-dlp might choose .mkv or .webm)
+            if downloaded_video_actual_path.suffix.lower() != ".mp4":
+                api_logger.info(f"[{request_id}] Renaming downloaded video {downloaded_video_actual_path.name} to {video_filename_mp4}")
+                downloaded_video_actual_path.rename(downloaded_video_path_mp4)
+            else:
+                # If it's already mp4 and named with request_id, it's fine.
+                # If it's mp4 but has a different name (e.g. video title), rename it.
+                if downloaded_video_actual_path.name != video_filename_mp4:
+                     downloaded_video_actual_path.rename(downloaded_video_path_mp4)
 
-        api_logger.info(f"[{request_id}] yt-dlp processing block finished. Checking for WAV file: {downloaded_audio_path}")
-        
-        if not downloaded_audio_path.exists():
-            api_logger.error(f"[{request_id}] CRITICAL: Expected WAV file {downloaded_audio_path} not found after yt-dlp processing.")
-            dir_contents = [str(p) for p in YOUTUBE_DOWNLOADS_FOLDER.iterdir() if p.name.startswith(request_id)]
-            api_logger.debug(f"[{request_id}] Relevant contents of {YOUTUBE_DOWNLOADS_FOLDER}: {dir_contents}")
-            intermediate_files = list(YOUTUBE_DOWNLOADS_FOLDER.glob(f"{request_id}.*"))
-            if intermediate_files:
-                api_logger.warning(f"[{request_id}] Intermediate files found: {intermediate_files}. WAV conversion by yt-dlp might have failed silently.")
-            return jsonify({"error": "Failed to produce WAV file from YouTube audio."}), 500
+            api_logger.info(f"[{request_id}] Video downloaded successfully: {downloaded_video_path_mp4}")
 
-        api_logger.info(f"[{request_id}] Successfully obtained WAV file: {downloaded_audio_path}")
-
-        api_logger.info(f"[{request_id}] Verifying and standardizing WAV format with pydub: {downloaded_audio_path}")
+        # Now, extract audio from the downloaded video and convert to WAV for diarization
+        api_logger.info(f"[{request_id}] Extracting audio from {downloaded_video_path_mp4} to {processed_audio_path_wav}")
         try:
-            audio = AudioSegment.from_wav(downloaded_audio_path)
-        except CouldntDecodeError:
-            api_logger.error(f"[{request_id}] pydub CouldntDecodeError: The file {downloaded_audio_path} might not be a valid WAV or FFmpeg is missing/misconfigured for pydub.")
-            return jsonify({"error": "Failed to read the downloaded WAV file. It might be corrupted or FFmpeg is not found by pydub."}), 500
-
-        api_logger.info(f"[{request_id}] Loaded '{downloaded_audio_path.name}' with pydub. Duration: {len(audio) / 1000.0:.2f}s, Channels: {audio.channels}, Frame Rate: {audio.frame_rate}Hz")
-        
-        needs_resave = False
-        if audio.channels > 1:
-            api_logger.info(f"[{request_id}] Audio has {audio.channels} channels. Converting to mono.")
-            audio = audio.set_channels(1)
-            needs_resave = True
-        
-        target_frame_rate = 16000
-        if audio.frame_rate != target_frame_rate:
-            api_logger.info(f"[{request_id}] Audio frame rate is {audio.frame_rate}Hz. Resampling to {target_frame_rate}Hz.")
-            audio = audio.set_frame_rate(target_frame_rate)
-            needs_resave = True
-        
-        if needs_resave:
-            api_logger.info(f"[{request_id}] Re-saving WAV file with standardized format (mono, {target_frame_rate}Hz).")
-            audio.export(downloaded_audio_path, format="wav")
-            api_logger.info(f"[{request_id}] WAV file standardized and re-saved.")
-        else:
-            api_logger.info(f"[{request_id}] WAV file already in desired format (mono, {target_frame_rate}Hz or close enough).")
+            video_audio = AudioSegment.from_file(str(downloaded_video_path_mp4)) # Load audio from the video
+            
+            # Standardize audio for diarization pipeline
+            if video_audio.channels > 1:
+                api_logger.info(f"[{request_id}] Audio from video has {video_audio.channels} channels. Converting to mono.")
+                video_audio = video_audio.set_channels(1)
+            
+            target_frame_rate = 16000
+            if video_audio.frame_rate != target_frame_rate:
+                api_logger.info(f"[{request_id}] Audio from video frame rate is {video_audio.frame_rate}Hz. Resampling to {target_frame_rate}Hz.")
+                video_audio = video_audio.set_frame_rate(target_frame_rate)
+            
+            video_audio.export(processed_audio_path_wav, format="wav")
+            api_logger.info(f"[{request_id}] Audio extracted and saved as WAV: {processed_audio_path_wav}")
+        except Exception as e_audio_extract:
+            api_logger.error(f"[{request_id}] Failed to extract or convert audio from video: {e_audio_extract}", exc_info=True)
+            cleanup_files(downloaded_video_path_mp4) # Clean up video if audio extraction failed
+            return jsonify({"error": "Failed to extract audio from video for diarization."}), 500
 
         video_title = info_dict.get('title', 'youtube_video')
         api_logger.info(f"[{request_id}] Successfully processed video: {video_title}")
         
         return jsonify({
-            "message": "Audio downloaded and converted to WAV successfully",
-            "server_file_path": str(downloaded_audio_path),
-            "file_name": downloaded_audio_path.name,
+            "message": "Video downloaded and audio extracted successfully",
+            "video_file_url": f"/api/video/{video_filename_mp4}", # URL to stream/fetch the video
+            "audio_server_file_path": str(processed_audio_path_wav), # Path to WAV audio for diarization
+            "audio_file_name": audio_filename_wav, # Name of the WAV file
             "original_video_title": video_title
         }), 200
 
     except yt_dlp.utils.DownloadError as e:
         api_logger.error(f"[{request_id}] yt-dlp DownloadError for URL {youtube_url}: {e}", exc_info=True)
-        cleanup_files(downloaded_audio_path)
-        return jsonify({"error": f"Failed to download audio from YouTube: {str(e)}"}), 500
+        cleanup_files(downloaded_video_path_mp4, processed_audio_path_wav)
+        return jsonify({"error": f"Failed to download video from YouTube: {str(e)}"}), 500
     except FileNotFoundError as e: 
         if 'ffmpeg' in str(e).lower() or 'avconv' in str(e).lower():
-            api_logger.error(f"[{request_id}] pydub FileNotFoundError: FFmpeg (or AVconv) not found by pydub. Ensure it's installed and in your system PATH. Error: {e}", exc_info=True)
-            cleanup_files(downloaded_audio_path)
-            return jsonify({"error": "Audio conversion/verification failed: FFmpeg not found by pydub on server."}), 500
+            api_logger.error(f"[{request_id}] pydub/yt-dlp FileNotFoundError: FFmpeg not found. Error: {e}", exc_info=True)
+            cleanup_files(downloaded_video_path_mp4, processed_audio_path_wav)
+            return jsonify({"error": "Processing failed: FFmpeg not found on server."}), 500
         else:
             api_logger.error(f"[{request_id}] FileNotFoundError during processing: {e}", exc_info=True)
-            cleanup_files(downloaded_audio_path)
+            cleanup_files(downloaded_video_path_mp4, processed_audio_path_wav)
             return jsonify({"error": f"A required file was not found: {str(e)}"}), 500
     except Exception as e:
         api_logger.error(f"[{request_id}] General error processing YouTube URL {youtube_url}: {e}", exc_info=True)
-        cleanup_files(downloaded_audio_path)
+        cleanup_files(downloaded_video_path_mp4, processed_audio_path_wav)
         return jsonify({"error": f"An internal server error occurred: {str(e)}"}), 500
 
+# New route to serve video files
+@app.route('/api/video/<filename>')
+def serve_video(filename):
+    api_logger.info(f"Request to serve video: {filename}")
+    # Basic security: ensure filename is somewhat safe (e.g., doesn't contain '..')
+    if '..' in filename or filename.startswith('/'):
+        api_logger.warning(f"Attempt to access potentially unsafe path: {filename}")
+        return "Invalid filename", 400
+    
+    # Ensure the file being requested is within the YOUTUBE_DOWNLOADS_FOLDER
+    file_path = (YOUTUBE_DOWNLOADS_FOLDER / filename).resolve()
+    if not file_path.is_file() or not file_path.is_relative_to(YOUTUBE_DOWNLOADS_FOLDER.resolve()):
+        api_logger.error(f"Video file not found or access denied: {file_path}")
+        return "File not found", 404
+        
+    return send_from_directory(YOUTUBE_DOWNLOADS_FOLDER, filename, as_attachment=False)
 
+
+# /api/diarize route remains largely the same, but ensure it can handle server_file_path
+# from YOUTUBE_DOWNLOADS_FOLDER correctly. (The existing logic should be fine)
 @app.route('/api/diarize', methods=['POST'])
 def diarize_audio_route():
     api_logger.info("Received request to /api/diarize")
@@ -187,6 +189,7 @@ def diarize_audio_route():
     api_logger.info(f"Diarization request ID: {request_id}")
     
     if 'audio_file' in request.files:
+        # ... (existing file upload logic remains the same) ...
         api_logger.info(f"[{request_id}] Processing uploaded audio file.")
         file = request.files['audio_file']
         if file.filename == '':
@@ -203,7 +206,7 @@ def diarize_audio_route():
             return jsonify({"error": "Invalid file type for upload. Please upload a .wav file"}), 400
     else:
         data = request.get_json()
-        if data and 'server_file_path' in data:
+        if data and 'server_file_path' in data: # Changed from audio_server_file_path for consistency
             server_file_path_str = data['server_file_path']
             api_logger.info(f"[{request_id}] Processing server-side audio file: {server_file_path_str}")
             prospective_path = Path(server_file_path_str).resolve()
@@ -258,13 +261,16 @@ def diarize_audio_route():
         
         api_logger.info(f"[{request_id}] Successfully processed. Found {len(transcript_segments)} segments.")
         
+        # Clean up uploaded file if it was a direct upload and temporary
         if 'audio_file' in request.files and audio_to_process_path.is_relative_to(UPLOAD_FOLDER.resolve()):
             cleanup_files(audio_to_process_path)
+        # Note: The WAV extracted from YouTube is kept in YOUTUBE_DOWNLOADS_FOLDER for now.
+        # The MP4 video is also kept. Consider a cleanup strategy for these.
         
         return jsonify({
             "message": "Diarization successful",
             "transcript": transcript_segments,
-            "fileName": original_filename_for_output
+            "fileName": original_filename_for_output # This will be the .wav name for YouTube audio
         }), 200
 
     except Exception as e:
