@@ -1,4 +1,4 @@
-# config.py
+# backend/config.py
 """
 Configuration module for the Speech Diarization Pipeline.
 
@@ -15,25 +15,13 @@ from typing import Optional, Union
 DEFAULT_DIARIZATION_MODEL = "pyannote/speaker-diarization-3.1"
 DEFAULT_ASR_MODEL = "readerbench/whisper-ro" # User's preferred default
 DEFAULT_OUTPUT_DIR = Path("./diarization_output_modular") # Default output location
+DEFAULT_MIN_LENGTH_FOR_ASR_BATCHING_S = 600 # e.g., 10 minutes
 
 logger = logging.getLogger(__name__)
 
 class DiarizationConfig:
     """
     Configuration settings for the diarization pipeline.
-
-    Attributes:
-        audio_file_path (Path): Path to the input audio file.
-        output_dir (Path): Directory to save output and cache files.
-        hf_access_token (Optional[str]): Hugging Face API token.
-        device (Union[str, int]): Processing device ('cpu', 'mps', or GPU index).
-        diarization_model (str): Name of the pyannote diarization model.
-        asr_model (str): Name of the Hugging Face ASR model.
-        cache_dir (Optional[Path]): Custom directory for Hugging Face model cache.
-        force_recompute_diarization (bool): If True, ignore cached diarization results.
-        force_recompute_asr (bool): If True, ignore cached ASR results.
-        whisper_batch_size (int): Batch size for ASR inference.
-        diarization_cache_path (Path): Full path to the diarization cache file.
     """
     def __init__(
         self,
@@ -48,7 +36,13 @@ class DiarizationConfig:
         cache_dir: Optional[Union[str, Path]] = None,
         force_recompute_diarization: bool = False,
         force_recompute_asr: bool = False,
-        whisper_batch_size: int = 16,
+        whisper_batch_size: int = 16, # Batch size for Whisper model inference within each ASR chunk
+        
+        # ASR Batching Parameters
+        enable_asr_batching: Optional[bool] = None, # None for auto-detect based on audio length
+        min_audio_length_for_batching_s: int = DEFAULT_MIN_LENGTH_FOR_ASR_BATCHING_S,
+        asr_processing_chunk_duration_s: int = 300,  # e.g., 5 minutes per ASR chunk
+        asr_processing_chunk_overlap_s: int = 30,    # e.g., 30 seconds overlap between ASR chunks
     ):
         """
         Initializes the DiarizationConfig object.
@@ -75,11 +69,27 @@ class DiarizationConfig:
         self.diarization_cache_path = self.output_dir / f"{self.audio_file_path.stem}.diarization.pkl"
         logger.info(f"Diarization cache path: {self.diarization_cache_path}")
 
+        # ASR Batching settings
+        self.enable_asr_batching = enable_asr_batching
+        self.min_audio_length_for_batching_s = min_audio_length_for_batching_s
+        self.asr_processing_chunk_duration_s = asr_processing_chunk_duration_s
+        self.asr_processing_chunk_overlap_s = asr_processing_chunk_overlap_s
+        
+        if self.enable_asr_batching is None: # Auto-detect if not explicitly set
+            # This part requires getting audio duration.
+            # We'll do this check in pipeline_core.py where audio info is available.
+            logger.info("ASR batching mode will be auto-detected based on audio length.")
+        elif self.enable_asr_batching:
+            logger.info(f"ASR batching explicitly enabled. Chunk duration: {self.asr_processing_chunk_duration_s}s, Overlap: {self.asr_processing_chunk_overlap_s}s")
+        else:
+            logger.info("ASR batching explicitly disabled.")
+
+
     @staticmethod
     def _detect_device(use_gpu: bool, use_mps: bool) -> Union[str, int]:
         """Automatically selects the processing device."""
         if use_gpu and torch.cuda.is_available():
-            device_idx = 0
+            device_idx = 0 
             logger.info(f"CUDA (GPU) detected. Using GPU device index: {device_idx}")
             return device_idx
         elif use_mps and hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
@@ -103,14 +113,17 @@ class DiarizationConfig:
         """Returns the device string/index formatted for HF pipelines."""
         if isinstance(self.device, int):
             return f"cuda:{self.device}"
-        return str(self.device) # 'mps' or 'cpu'
+        return str(self.device) 
 
     @property
     def asr_cache_file_path(self) -> Path:
         """Dynamically generates the path for the ASR cache file."""
         asr_base_name = self.audio_file_path.stem
         model_name_slug = self.asr_model.replace('/','_')
-        asr_cache_filename = f"{asr_base_name}_{model_name_slug}.asr.pkl"
+        # If ASR batching is used, the cache might represent the full combined ASR.
+        # Or, one could implement per-chunk caching, but that's more complex.
+        # For now, one cache file for the potentially batched ASR result.
+        asr_cache_filename = f"{asr_base_name}_{model_name_slug}.asr_batched.pkl" if self.enable_asr_batching else f"{asr_base_name}_{model_name_slug}.asr.pkl"
         return self.output_dir / asr_cache_filename
 
     @property
